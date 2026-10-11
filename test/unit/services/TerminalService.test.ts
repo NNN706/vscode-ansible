@@ -167,6 +167,37 @@ describe("TerminalService", function () {
       expect(mockCreateTerminal).not.toHaveBeenCalled();
     });
 
+    it.each([false, true])(
+      "only reuses a terminal created in the requested cwd (match: %s)",
+      async (matches) => {
+        setupWithNoApi();
+        const cwd = vscode.Uri.file("/workspace/infra");
+        const existing = {
+          ...createMockTerminal("Ansible Terminal"),
+          creationOptions: {
+            cwd: matches ? cwd : vscode.Uri.file("/workspace/other"),
+          },
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (vscode.window as any).terminals = [existing];
+        const managed = await service.createActivatedTerminal({
+          name: "Ansible Terminal",
+          cwd,
+          matchCwdOnReuse: true,
+          reuseExisting: true,
+        });
+        if (matches) {
+          expect(managed.terminal).toBe(existing);
+          expect(mockCreateTerminal).not.toHaveBeenCalled();
+        } else {
+          expect(managed.terminal).not.toBe(existing);
+          expect(mockCreateTerminal).toHaveBeenCalledWith(
+            expect.objectContaining({ cwd }),
+          );
+        }
+      },
+    );
+
     it("should create new terminal when no matching terminal exists", async function () {
       setupWithNoApi();
 

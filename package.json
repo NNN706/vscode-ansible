@@ -228,6 +228,13 @@
             "scope": "machine-overridable",
             "type": "string"
           },
+          "ansible.runner.workingDirectory": {
+            "default": "",
+            "markdownDescription": "%configuration.runner.workingDirectory%",
+            "order": 3,
+            "scope": "resource",
+            "type": "string"
+          },
           "ansible.ansible.reuseTerminal": {
             "default": false,
             "markdownDescription": "Enabling this will cause ansible commands run through VS Code to reuse the same Ansible Terminal.",

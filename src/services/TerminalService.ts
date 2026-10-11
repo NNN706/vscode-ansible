@@ -44,6 +44,8 @@ interface CreateTerminalOptions {
   env?: NodeJS.ProcessEnv;
   /** Whether to reuse an existing terminal with the same name */
   reuseExisting?: boolean;
+  /** Only reuse terminals created in cwd when an explicit cwd is provided. */
+  matchCwdOnReuse?: boolean;
 }
 
 export class TerminalService implements vscode.Disposable {
@@ -75,9 +77,23 @@ export class TerminalService implements vscode.Disposable {
     const activationTimeout = options.activationTimeout || 10000;
 
     if (options.reuseExisting) {
-      const existingTerminal = vscode.window.terminals.find(
-        (terminal) => terminal.name === options.name,
-      );
+      const existingTerminal = vscode.window.terminals.find((terminal) => {
+        if (terminal.name !== options.name) {
+          return false;
+        }
+        if (!options.matchCwdOnReuse || !options.cwd) {
+          return true;
+        }
+        const creationOptions = terminal.creationOptions;
+        const existingCwd =
+          "cwd" in creationOptions ? creationOptions.cwd : undefined;
+        return (
+          existingCwd !== undefined &&
+          path.resolve(
+            typeof existingCwd === "string" ? existingCwd : existingCwd.fsPath,
+          ) === path.resolve(options.cwd.fsPath)
+        );
+      });
       if (existingTerminal) {
         if (showTerminal) {
           existingTerminal.show();

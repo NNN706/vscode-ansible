@@ -8,6 +8,7 @@
   "configuration.navigate.executablePath": "Points to the ansible-navigator executable.",
   "configuration.playbook.arguments": "Add arguments to `ansible-playbook` command",
   "configuration.run.executablePath": "Points to the ansible-playbook executable.",
+  "configuration.runner.workingDirectory": "Working directory for ansible-playbook and ansible-navigator runner commands. Relative paths are resolved from the selected playbook’s workspace folder. Supports ${workspaceFolder} and ${workspaceFolder:name}. Leave empty to keep the default terminal working directory. The directory must exist.",
   "configuration.suggest.basic": "Controls whether the built-in Ansible language suggestions are enabled. The support suggests Ansible globals and variables.",
   "configuration.title": "Ansible",
   "configuration.validate.enable": "Enable/disable ansible-lint validation.",

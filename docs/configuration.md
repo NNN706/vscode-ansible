@@ -15,6 +15,41 @@ any level (User, Remote, Workspace and/or Folder).
 - `ansible.playbook.arguments`: Specify additional arguments to append to
   ansible-playbook invocation. e.g. `--syntax-check`
 
+## Runner Working Directory
+
+`ansible.runner.workingDirectory` sets the working directory for both
+`ansible-playbook` and `ansible-navigator run`. It has resource scope, so folder
+settings are read using the playbook being executed.
+The default, an empty string, preserves the existing terminal behavior.
+
+Absolute paths are accepted. Relative paths are resolved from the workspace
+folder containing the playbook, rather than from the first workspace folder.
+`${workspaceFolder}` refers to that same folder; `${workspaceFolder:name}`
+refers to a workspace folder with the given name. Other variables are not
+supported. An unresolved variable, a relative path without a workspace folder,
+or a missing directory produces an error before a terminal command is sent.
+
+For a multi-root `Lotrepair.code-workspace`, keep the repository root first and
+select the Ansible folder explicitly:
+
+```json
+{
+  "folders": [
+    { "name": ".", "path": "." },
+    { "name": "Ansible", "path": "infra" }
+  ],
+  "settings": {
+    "ansible.runner.workingDirectory": "${workspaceFolder:Ansible}"
+  }
+}
+```
+
+Alternatively, set `"ansible.runner.workingDirectory": "."` in
+`infra/.vscode/settings.json` when `infra` is a workspace folder.
+A reused terminal must have been created with the configured working directory;
+terminals created for other directories are not reused. If you manually change
+its directory in the shell, close that terminal before running again.
+
 ## Validation Settings
 
 - `ansible.validation.lint.arguments`: Optional command line arguments to be

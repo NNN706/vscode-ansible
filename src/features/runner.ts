@@ -1,5 +1,6 @@
 /* "stdlib" */
-import { existsSync } from "fs";
+import { existsSync, statSync } from "fs";
+import * as path from "path";
 import * as vscode from "vscode";
 
 /* local */
@@ -134,7 +135,7 @@ export class AnsiblePlaybookRunProvider implements vscode.Disposable {
   /**
    * Create or reuse a terminal with Python environment activated.
    */
-  private async getTerminal(): Promise<vscode.Terminal> {
+  private async getTerminal(cwd?: vscode.Uri): Promise<vscode.Terminal> {
     const reuseTerminal = vscode.workspace
       .getConfiguration("ansible.ansible")
       .get<boolean>("reuseTerminal", false);
@@ -142,6 +143,8 @@ export class AnsiblePlaybookRunProvider implements vscode.Disposable {
 
     const managed = await terminalService.createActivatedTerminal({
       name: "Ansible Terminal",
+      cwd,
+      matchCwdOnReuse: true,
       reuseExisting: reuseTerminal,
     });
 
@@ -152,8 +155,20 @@ export class AnsiblePlaybookRunProvider implements vscode.Disposable {
   /**
    * A helper method for executing commands in terminal.
    */
-  private async invokeInTerminal(cmd: string): Promise<void> {
-    const terminal = await this.getTerminal();
+  private async invokeInTerminal(
+    cmd: string,
+    playbookFsPath: string,
+  ): Promise<void> {
+    let cwd: vscode.Uri | undefined;
+    try {
+      cwd = resolveRunnerWorkingDirectory(vscode.Uri.file(playbookFsPath));
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        error instanceof Error ? error.message : String(error),
+      );
+      return;
+    }
+    const terminal = await this.getTerminal(cwd);
     terminal.show();
     terminal.sendText(cmd);
   }
@@ -187,7 +202,7 @@ export class AnsiblePlaybookRunProvider implements vscode.Disposable {
     const command = `${runExecutable} ${cmdArgs}`;
 
     console.debug(`Running command: ${command}`);
-    await this.invokeInTerminal(command);
+    await this.invokeInTerminal(command, playbookFsPath);
   }
 
   /**
@@ -220,7 +235,7 @@ export class AnsiblePlaybookRunProvider implements vscode.Disposable {
     const cmdArgs = commandLineArgs.map((arg) => arg).join(" ");
     const command = `${runExecutable} run ${cmdArgs}`;
     console.debug(`Running command: ${command}`);
-    await this.invokeInTerminal(command);
+    await this.invokeInTerminal(command, playbookFsPath);
   }
 }
 
@@ -239,4 +254,51 @@ function extractTargetFsPath(
     .filter((p): p is vscode.Uri => p instanceof vscode.Uri)
     .find((p) => p.scheme === "file");
   return firstFilePath?.fsPath;
+}
+
+/** Resolve runner paths using the selected playbook's workspace folder. */
+export function resolveRunnerWorkingDirectory(
+  playbook: vscode.Uri,
+): vscode.Uri | undefined {
+  const configured = vscode.workspace
+    .getConfiguration("ansible.runner", playbook)
+    .get<string>("workingDirectory", "");
+  if (!configured) {
+    return undefined;
+  }
+
+  const folder = vscode.workspace.getWorkspaceFolder(playbook);
+  const expanded = configured.replace(
+    /\$\{workspaceFolder(?::([^}]+))?\}/g,
+    (_match: string, name: string | undefined) => {
+      const target = name
+        ? vscode.workspace.workspaceFolders?.find((item) => item.name === name)
+        : folder;
+      if (!target) {
+        throw new Error(
+          `Cannot resolve workspace folder for ansible.runner.workingDirectory: ${configured}`,
+        );
+      }
+      return target.uri.fsPath;
+    },
+  );
+  if (expanded.includes("${")) {
+    throw new Error(
+      `Unsupported variable in ansible.runner.workingDirectory: ${configured}`,
+    );
+  }
+  if (!path.isAbsolute(expanded) && !folder) {
+    throw new Error(
+      "A relative ansible.runner.workingDirectory requires a playbook in a workspace folder.",
+    );
+  }
+  const resolved = path.isAbsolute(expanded)
+    ? path.normalize(expanded)
+    : path.resolve(folder?.uri.fsPath ?? "", expanded);
+  if (!existsSync(resolved) || !statSync(resolved).isDirectory()) {
+    throw new Error(
+      `ansible.runner.workingDirectory is not an existing directory: ${resolved}`,
+    );
+  }
+  return vscode.Uri.file(resolved);
 }
