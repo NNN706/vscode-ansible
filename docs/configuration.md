@@ -15,6 +15,13 @@ any level (User, Remote, Workspace and/or Folder).
 - `ansible.playbook.arguments`: Specify additional arguments to append to
   ansible-playbook invocation. e.g. `--syntax-check`
 
+## Run Playbooks
+
+For Ansible files, the editor title bar provides a **Run playbook via
+ansible-playbook** button (the play icon). It runs the active playbook using
+`ansible.runner.workingDirectory`. To run via `ansible-navigator`, use the
+existing **Run Ansible Playbook** context menu.
+
 ## Runner Working Directory
 
 `ansible.runner.workingDirectory` sets the working directory for both

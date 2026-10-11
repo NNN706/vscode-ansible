@@ -36,6 +36,7 @@
       {
         "category": "%commands.category.ansible-playbook%",
         "command": "extension.ansible-playbook.run",
+        "icon": "$(play)",
         "title": "%commands.title.ansible-playbook%"
       },
       {
@@ -763,6 +764,13 @@
           "command": "extension.buildExecutionEnvironment",
           "group": "navigation",
           "when": "resourceFilename == 'execution-environment.yml' || resourceFilename == 'execution-environment.yaml'"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "extension.ansible-playbook.run",
+          "group": "navigation@1",
+          "when": "resourceScheme == file && resourceLangId == ansible"
         }
       ],
       "explorer/context": [
