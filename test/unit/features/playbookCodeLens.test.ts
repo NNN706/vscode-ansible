@@ -34,6 +34,12 @@ describe("PlaybookCodeLensProvider", () => {
     "---\n- name: Check DNS\n  hosts: all\n  tasks: []",
     "- hosts: all\n  tasks: []\n- hosts: web\n  tasks: []",
     "- hosts: all\n  vars: { secret: !vault encrypted }",
+    "---\n- import_playbook: start_scanner.yml",
+    "- name: Start subpage\n  import_playbook: start_subpage.yml",
+    "- ansible.builtin.import_playbook: includes/start.yml",
+    "- ansible.legacy.import_playbook: includes/start.yml",
+    "- import_playbook: start_scanner.yml\n- import_playbook: start_subpage.yml",
+    "- import_playbook: start.yml\n- hosts: all\n  tasks: []",
   ])("offers one whole-playbook action for %s", (text) => {
     const doc = document(text);
     const lenses = provider.provideCodeLenses(doc);
@@ -53,6 +59,10 @@ describe("PlaybookCodeLensProvider", () => {
     "- name: Task\n  ansible.builtin.debug: { msg: hi }",
     "- hosts: [broken",
     "- name: Service\n  hosts_file: /etc/hosts",
+    "- import_tasks: includes/install_docker.yml",
+    "- ansible.builtin.import_tasks: includes/install_docker.yml",
+    "- include_tasks: includes/install_docker.yml",
+    "- name: Import role\n  ansible.builtin.import_role: { name: nginx }",
   ])("does not offer a runner for vars, tasks or invalid YAML: %s", (text) => {
     expect(provider.provideCodeLenses(document(text))).toEqual([]);
   });

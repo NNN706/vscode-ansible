@@ -18,7 +18,7 @@ on:
       version:
         description: VSIX version (major.minor.patch)
         required: true
-        default: "0.0.2"
+        default: "0.0.3"
 
 permissions:
   contents: read
@@ -44,7 +44,7 @@ jobs:
         env:
           REQUESTED_VERSION: ${{ inputs.version }}
         run: |
-          version="${REQUESTED_VERSION:-0.0.2}"
+          version="${REQUESTED_VERSION:-0.0.3}"
           if [[ "$GITHUB_REF_TYPE" == tag ]]; then
             version="${GITHUB_REF_NAME#fork-v}"
           fi

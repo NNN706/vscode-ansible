@@ -15,8 +15,8 @@ artifacts. The release job only runs after a successful build and has
 Push a version tag pointing at the tested fork commit:
 
 ```sh
-git tag fork-v0.0.2
-git push origin fork-v0.0.2
+git tag fork-v0.0.3
+git push origin fork-v0.0.3
 ```
 
 The tag must use `fork-vMAJOR.MINOR.PATCH`. The workflow validates the version,
@@ -24,7 +24,7 @@ uses it for the VSIX manifest and creates a GitHub Release with VSIX, ZIP and
 ALS tarball attached. A failed build does not publish a release. Existing
 releases are not overwritten. Use a new version/tag for the next release.
 
-Branch pushes build version `0.0.2` as an artifact without publishing a release.
+Branch pushes build version `0.0.3` as an artifact without publishing a release.
 `workflow_dispatch` also builds an artifact with the supplied version; the
 workflow must be present on the default branch to be listed for manual runs.
 
@@ -40,7 +40,8 @@ Install from VSIX**, then **Developer: Reload Window**. The build retains the
 fork build.
 
 Enable `editor.codeLens` and use Ansible language mode. Playbooks with a top-level
-list of plays containing `hosts` show **▶ Run Playbook** above their first line.
+list containing `hosts` or `import_playbook` (including the builtin/legacy fully
+qualified forms) show **▶ Run Playbook** above their first line.
 This action runs the whole file, using `ansible.runner.workingDirectory`.
 The YAML schema link is provided by a different extension and can remain next
 to this CodeLens; this fork does not remove or replace that link.

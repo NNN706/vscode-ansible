@@ -9,7 +9,14 @@ export class PlaybookCodeLensProvider implements vscode.CodeLensProvider {
     if (
       yaml.errors.length > 0 ||
       !isSeq(yaml.contents) ||
-      !yaml.contents.items.some((play) => isMap(play) && play.has("hosts"))
+      !yaml.contents.items.some(
+        (play) =>
+          isMap(play) &&
+          (play.has("hosts") ||
+            play.has("import_playbook") ||
+            play.has("ansible.builtin.import_playbook") ||
+            play.has("ansible.legacy.import_playbook")),
+      )
     ) {
       return [];
     }

@@ -17,7 +17,7 @@ any level (User, Remote, Workspace and/or Folder).
 
 ## Run Playbooks
 
-For a playbook (a YAML list with a play containing `hosts`), **▶ Run Playbook**
+For a playbook (a YAML list containing `hosts` or `import_playbook`), **▶ Run Playbook**
 appears above the first line as a CodeLens. Enable `editor.codeLens` if it is
 hidden. Role task files and variable files do not show this action. The action
 runs the document it belongs to and uses `ansible.runner.workingDirectory`.
