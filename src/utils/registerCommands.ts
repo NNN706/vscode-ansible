@@ -21,9 +21,9 @@ export async function registerCommandWithTelemetry(
   skipSuccess?: boolean,
 ): Promise<void> {
   context.subscriptions.push(
-    commands.registerCommand(commandName, async () => {
+    commands.registerCommand(commandName, async (argument?: unknown) => {
       try {
-        await commandAction();
+        await commandAction(argument);
         if (!skipSuccess) {
           await telemetry.sendCommandSucceededTelemetry(commandName);
         }

@@ -10,6 +10,7 @@ import { AnsibleCommands } from "@src/definitions/constants";
 import { registerCommandWithTelemetry } from "@src/utils/registerCommands";
 import { TelemetryManager } from "@src/utils/telemetryUtils";
 import { SettingsManager } from "@src/settings";
+import { PlaybookCodeLensProvider } from "@src/features/playbookCodeLens";
 import { TerminalService } from "@src/services/TerminalService";
 
 // eslint-disable-next-line no-control-regex
@@ -45,6 +46,12 @@ export class AnsiblePlaybookRunProvider implements vscode.Disposable {
     this.extensionSettings = extensionSettings;
     this.telemetry = telemetry;
     this.configureCommands();
+    this.vsCodeExtCtx.subscriptions.push(
+      vscode.languages.registerCodeLensProvider(
+        { language: "ansible", scheme: "file" },
+        new PlaybookCodeLensProvider(),
+      ),
+    );
   }
 
   dispose(): void {

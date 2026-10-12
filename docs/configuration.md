@@ -17,10 +17,14 @@ any level (User, Remote, Workspace and/or Folder).
 
 ## Run Playbooks
 
-For Ansible files, the editor title bar provides a **Run playbook via
-ansible-playbook** button (the play icon). It runs the active playbook using
-`ansible.runner.workingDirectory`. To run via `ansible-navigator`, use the
-existing **Run Ansible Playbook** context menu.
+For a playbook (a YAML list with a play containing `hosts`), **▶ Run Playbook**
+appears above the first line as a CodeLens. Enable `editor.codeLens` if it is
+hidden. Role task files and variable files do not show this action. The action
+runs the document it belongs to and uses `ansible.runner.workingDirectory`.
+The YAML extension's schema CodeLens is independent and may appear alongside it.
+
+To run via `ansible-navigator`, use the existing **Run Ansible Playbook**
+context menu.
 
 ## Runner Working Directory
 

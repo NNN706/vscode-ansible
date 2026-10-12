@@ -20,6 +20,7 @@ vi.mock("vscode", () => ({
     createTerminal: vi.fn(),
   },
   commands: { registerCommand: vi.fn() },
+  languages: { registerCodeLensProvider: vi.fn() },
   Uri: class {
     scheme = "file";
     constructor(public fsPath: string) {}
