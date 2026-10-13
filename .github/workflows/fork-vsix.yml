@@ -3,7 +3,7 @@ name: Fork VSIX
 on:
   push:
     branches: ["**"]
-    tags: ["fork-v*", "marketplace-v*"]
+    tags: ["fork-v*"]
     paths:
       - "src/**"
       - "test/unit/**"
@@ -11,8 +11,6 @@ on:
       - "webviews/**"
       - "package.json"
       - "package.nls.json"
-      - "tools/prepare-marketplace.mts"
-      - "docs/marketplace-readme.md"
       - "pnpm-lock.yaml"
       - ".github/workflows/fork-vsix.yml"
   workflow_dispatch:
@@ -20,7 +18,7 @@ on:
       version:
         description: VSIX version (major.minor.patch)
         required: true
-        default: "0.0.5"
+        default: "0.0.3"
 
 permissions:
   contents: read
@@ -46,27 +44,15 @@ jobs:
         env:
           REQUESTED_VERSION: ${{ inputs.version }}
         run: |
-          version="${REQUESTED_VERSION:-0.0.5}"
+          version="${REQUESTED_VERSION:-0.0.3}"
           if [[ "$GITHUB_REF_TYPE" == tag ]]; then
             version="${GITHUB_REF_NAME#fork-v}"
-            version="${version#marketplace-v}"
           fi
           if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Expected a major.minor.patch version" >&2
             exit 1
           fi
           echo "VSIX_VERSION=$version" >> "$GITHUB_ENV"
-      - name: Prepare independent Marketplace identity
-        env:
-          MARKETPLACE_PUBLISHER: ${{ vars.VSCE_PUBLISHER }}
-        run: |
-          if [[ "$GITHUB_REF_NAME" == marketplace-v* && -z "$MARKETPLACE_PUBLISHER" ]]; then
-            echo "Set the VSCE_PUBLISHER repository variable before publishing." >&2
-            exit 1
-          fi
-          if [[ -n "$MARKETPLACE_PUBLISHER" ]]; then
-            node tools/prepare-marketplace.mts
-          fi
       - name: Install dependencies
         run: corepack pnpm install --frozen-lockfile
       - name: Build, test and package
@@ -79,7 +65,6 @@ jobs:
               test/unit/features/runner.test.ts \
               test/unit/features/playbookCodeLens.test.ts \
               test/unit/utils/registerCommands.test.ts \
-              test/unit/tools/prepareMarketplace.test.ts \
               test/unit/services/TerminalService.test.ts \
               test/unit/features/ansibleTox/runner.test.ts
             corepack pnpm run vite-build
@@ -115,6 +100,9 @@ jobs:
     if: github.ref_type == 'tag' && startsWith(github.ref_name, 'fork-v')
     needs: build
     runs-on: ubuntu-24.04
+    concurrency:
+      group: workflow-target-ansible-vsix
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
@@ -127,71 +115,62 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          gh release create "$GITHUB_REF_NAME" out/*.vsix out/*.tgz out/*.zip \
-            --verify-tag --title "Ansible fork ${GITHUB_REF_NAME#fork-v}" \
-            --notes "Fork build with portable runner cwd and a Run Playbook CodeLens."
-
-  marketplace:
-    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'marketplace-v')
-    needs: build
-    runs-on: ubuntu-24.04
-    environment: marketplace
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
-        with:
-          node-version: "24"
-      - name: Install publishing tool from lockfile
-        run: corepack pnpm install --frozen-lockfile
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: ansible-extension-build
-          path: out
-      - name: Validate artifact identity
+          if gh release view "$GITHUB_REF_NAME" --json tagName >/dev/null 2>&1; then
+            echo "GitHub Release already exists; continuing deployment."
+          else
+            gh release create "$GITHUB_REF_NAME" out/*.vsix out/*.tgz out/*.zip \
+              --verify-tag --title "Ansible fork ${GITHUB_REF_NAME#fork-v}" \
+              --notes "Fork build with portable runner cwd and a Run Playbook CodeLens."
+          fi
+      - name: Check deployment credential
         env:
-          EXPECTED_PUBLISHER: ${{ vars.VSCE_PUBLISHER }}
+          WORKFLOW_REPO_TOKEN: ${{ secrets.WORKFLOW_REPO_TOKEN }}
         run: |
-          python3 - <<'PY'
-          import glob, json, os, zipfile
-          files = glob.glob("out/*.vsix")
-          if len(files) != 1:
-              raise SystemExit("Expected exactly one VSIX")
-          with zipfile.ZipFile(files[0]) as archive:
-              manifest = json.loads(archive.read("extension/package.json"))
-          publisher = os.environ["EXPECTED_PUBLISHER"]
-          version = os.environ["GITHUB_REF_NAME"].removeprefix("marketplace-v")
-          if not publisher or publisher.lower() == "redhat":
-              raise SystemExit("An independent publisher is required")
-          if (manifest["publisher"], manifest["name"], manifest["version"]) != (publisher, "ansible-runner", version):
-              raise SystemExit("VSIX identity/version mismatch")
-          PY
-      - name: Log in with Microsoft Entra federation
-        if: vars.MARKETPLACE_AUTH_MODE == 'entra'
-        uses: azure/login@935127ca5bb3c4b02c9c2c10060028383878f33f # v3
+          if [[ -z "$WORKFLOW_REPO_TOKEN" ]]; then
+            echo "Set the WORKFLOW_REPO_TOKEN repository secret." >&2
+            exit 1
+          fi
+      - name: Checkout private VSIX repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          allow-no-subscriptions: true
-      - name: Publish tested VSIX
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-          AUTH_MODE: ${{ vars.MARKETPLACE_AUTH_MODE || 'pat' }}
-          AZURE_CORE_OUTPUT: none
+          repository: NNN706/workflow
+          token: ${{ secrets.WORKFLOW_REPO_TOKEN }}
+          path: workflow-target
+          fetch-depth: 0
+      - name: Deploy Ansible VSIX
+        working-directory: workflow-target
         run: |
-          case "$AUTH_MODE" in
-            pat)
-              if [[ -z "$VSCE_PAT" ]]; then
-                echo "Set the VSCE_PAT GitHub secret." >&2
-                exit 1
-              fi
-              npm exec -- vsce publish --packagePath out/*.vsix --skip-duplicate
-              ;;
-            entra)
-              unset VSCE_PAT
-              npm exec -- vsce publish --packagePath out/*.vsix --azure-credential --skip-duplicate
-              ;;
-            *) echo "Use MARKETPLACE_AUTH_MODE=pat or entra." >&2; exit 1 ;;
-          esac
+          version="${GITHUB_REF_NAME#fork-v}"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Expected a fork-vMAJOR.MINOR.PATCH release tag." >&2
+            exit 1
+          fi
+          source="$GITHUB_WORKSPACE/out/ansible-runner-cwd-$version.vsix"
+          test -f "$source"
+          branch="$(git symbolic-ref --short HEAD)"
+          mkdir -p .vscode/vsix
+          rm -f -- .vscode/vsix/ansible-runner-cwd-*.vsix
+          cp -- "$source" ".vscode/vsix/ansible-runner-cwd-$version.vsix"
+          git add -f -A -- '.vscode/vsix/ansible-runner-cwd-*.vsix'
+          if git diff --cached --quiet; then
+            echo "Ansible VSIX is already up to date."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "Update Ansible VSIX to $version"
+          for attempt in 1 2 3; do
+            if git push origin "HEAD:$branch"; then
+              exit 0
+            fi
+            if [[ "$attempt" == 3 ]]; then
+              echo "VSIX push failed after 3 attempts." >&2
+              exit 1
+            fi
+            git fetch origin "$branch"
+            if ! git rebase FETCH_HEAD; then
+              git rebase --abort
+              echo "Concurrent changes conflict with the Ansible VSIX update." >&2
+              exit 1
+            fi
+          done

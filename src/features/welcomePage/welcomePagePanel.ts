@@ -116,7 +116,7 @@ export class WelcomePagePanel {
   }
 
   private async handleWalkthroughClick(walkthroughId: string) {
-    const fullWalkthroughId = `${this.context.extension.id}#${walkthroughId}`;
+    const fullWalkthroughId = `redhat.ansible#${walkthroughId}`;
     await vscode.commands.executeCommand(
       "workbench.action.openWalkthrough",
       fullWalkthroughId,
@@ -197,7 +197,7 @@ export class WelcomePagePanel {
 
   private getWalkthroughs() {
     try {
-      const extension = this.context.extension;
+      const extension = vscode.extensions.getExtension("redhat.ansible");
       const manifest = extension?.packageJSON as
         ExtensionPackageManifest | undefined;
       const walkthroughs = manifest?.contributes?.walkthroughs || [];
