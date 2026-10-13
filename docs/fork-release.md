@@ -24,7 +24,7 @@ uses it for the VSIX manifest and creates a GitHub Release with VSIX, ZIP and
 ALS tarball attached. A failed build does not publish a release. Existing
 releases are not overwritten. Use a new version/tag for the next release.
 
-After creating the GitHub Release, the same job checks out the private
+After every successful build, a separate `deploy` job checks out the private
 `NNN706/workspace` repository using the source repository secret
 `WORKFLOW_REPO_TOKEN`. Use a fine-grained PAT with **Contents: Read and write**
 only for that target repository. Its default branch must allow bot pushes.
@@ -32,15 +32,16 @@ The job copies the already built VSIX to `.vscode/vsix/`, replacing only
 `ansible-runner-cwd-*.vsix`. Other extension archives and repository files remain
 untouched. No commit is created when the files are unchanged.
 
-Release jobs from this repository are serialized. Other repositories can still
+Deployment jobs from this repository are serialized. Other repositories can still
 push concurrently: a rejected push is retried at most three times, fetching
 and rebasing between attempts. A rebase conflict fails without forcing a push.
-Deployment errors do not remove the GitHub Release already created by the job.
-Rerunning a failed release job retains an existing GitHub Release and retries
-deployment without replacing its assets.
+Deployment is independent of the GitHub Release job and does not require a tag.
+Rerunning a failed deployment downloads the same build artifact without rebuilding
+or replacing GitHub Release assets.
 
-Branch pushes build version `0.0.3` as an artifact without publishing a release.
-`workflow_dispatch` also builds an artifact with the supplied version; the
+Branch pushes build version `0.0.3` as an artifact and deploy it automatically
+without publishing a GitHub Release. `workflow_dispatch` also builds and deploys
+an artifact with the supplied version; the
 workflow must be present on the default branch to be listed for manual runs.
 
 The workflow tests the fork runner features. It does not replace the full

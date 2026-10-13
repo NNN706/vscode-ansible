@@ -35,12 +35,15 @@ jobs:
   build:
     if: github.repository != 'ansible/vscode-ansible'
     runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: "24"
       - name: Select version
+        id: version
         env:
           REQUESTED_VERSION: ${{ inputs.version }}
         run: |
@@ -53,6 +56,7 @@ jobs:
             exit 1
           fi
           echo "VSIX_VERSION=$version" >> "$GITHUB_ENV"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Install dependencies
         run: corepack pnpm install --frozen-lockfile
       - name: Build, test and package
@@ -100,9 +104,6 @@ jobs:
     if: github.ref_type == 'tag' && startsWith(github.ref_name, 'fork-v')
     needs: build
     runs-on: ubuntu-24.04
-    concurrency:
-      group: workspace-target-ansible-vsix
-      cancel-in-progress: false
     permissions:
       contents: write
     steps:
@@ -122,6 +123,18 @@ jobs:
               --verify-tag --title "Ansible fork ${GITHUB_REF_NAME#fork-v}" \
               --notes "Fork build with portable runner cwd and a Run Playbook CodeLens."
           fi
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: workspace-target-ansible-vsix
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: ansible-extension-build
+          path: out
       - name: Check deployment credential
         env:
           WORKFLOW_REPO_TOKEN: ${{ secrets.WORKFLOW_REPO_TOKEN }}
@@ -139,10 +152,12 @@ jobs:
           fetch-depth: 0
       - name: Deploy Ansible VSIX
         working-directory: workspace-target
+        env:
+          VSIX_VERSION: ${{ needs.build.outputs.version }}
         run: |
-          version="${GITHUB_REF_NAME#fork-v}"
+          version="$VSIX_VERSION"
           if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Expected a fork-vMAJOR.MINOR.PATCH release tag." >&2
+            echo "Expected a major.minor.patch artifact version." >&2
             exit 1
           fi
           source="$GITHUB_WORKSPACE/out/ansible-runner-cwd-$version.vsix"
