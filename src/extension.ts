@@ -1127,7 +1127,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
       () => {
         vscode.commands.executeCommand(
           "workbench.action.openWalkthrough",
-          "redhat.ansible#create-ansible-environment",
+          `${context.extension.id}#create-ansible-environment`,
           false,
         );
       },
