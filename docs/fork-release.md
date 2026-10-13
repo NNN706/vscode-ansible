@@ -25,7 +25,7 @@ ALS tarball attached. A failed build does not publish a release. Existing
 releases are not overwritten. Use a new version/tag for the next release.
 
 After creating the GitHub Release, the same job checks out the private
-`NNN706/workflow` repository using the source repository secret
+`NNN706/workspace` repository using the source repository secret
 `WORKFLOW_REPO_TOKEN`. Use a fine-grained PAT with **Contents: Read and write**
 only for that target repository. Its default branch must allow bot pushes.
 The job copies the already built VSIX to `.vscode/vsix/`, replacing only

@@ -101,7 +101,7 @@ jobs:
     needs: build
     runs-on: ubuntu-24.04
     concurrency:
-      group: workflow-target-ansible-vsix
+      group: workspace-target-ansible-vsix
       cancel-in-progress: false
     permissions:
       contents: write
@@ -133,12 +133,12 @@ jobs:
       - name: Checkout private VSIX repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: NNN706/workflow
+          repository: NNN706/workspace
           token: ${{ secrets.WORKFLOW_REPO_TOKEN }}
-          path: workflow-target
+          path: workspace-target
           fetch-depth: 0
       - name: Deploy Ansible VSIX
-        working-directory: workflow-target
+        working-directory: workspace-target
         run: |
           version="${GITHUB_REF_NAME#fork-v}"
           if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
