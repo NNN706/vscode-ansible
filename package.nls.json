@@ -14,7 +14,7 @@
   "configuration.validate.enable": "Enable/disable ansible-lint validation.",
   "configuration.validate.executablePath": "Points to the ansible-lint executable.",
   "configuration.validate.run": "Whether the linter is run on save or on type.",
-  "description": "Provides rich language support for Ansible files.",
-  "displayName": "Ansible Language Features",
+  "description": "Community fork of vscode-ansible with portable runner working directory and Run Playbook CodeLens.",
+  "displayName": "Ansible Runner (NNN706)",
   "submenus.ansible.run-via": "Run Ansible Playbook via..."
 }

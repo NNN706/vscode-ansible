@@ -11,6 +11,7 @@ on:
       - "webviews/**"
       - "package.json"
       - "package.nls.json"
+      - "docs/fork-overview.md"
       - "pnpm-lock.yaml"
       - ".github/workflows/fork-vsix.yml"
   workflow_dispatch:

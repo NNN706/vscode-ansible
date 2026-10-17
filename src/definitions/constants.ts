@@ -53,7 +53,8 @@ export const DevcontainerImages = {
 };
 
 export const DevcontainerRecommendedExtensions = {
-  RECOMMENDED_EXTENSIONS: ["redhat.ansible", "redhat.vscode-redhat-account"],
+  // The fork is installed from VSIX, not through a Marketplace recommendation.
+  RECOMMENDED_EXTENSIONS: ["redhat.vscode-redhat-account"],
 };
 
 // Ansible-specific prompts and system instructions for LLM providers

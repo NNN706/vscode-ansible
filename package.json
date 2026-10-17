@@ -9,16 +9,11 @@
   "badges": [
     {
       "description": "last-commit",
-      "href": "https://github.com/ansible/vscode-ansible",
-      "url": "https://img.shields.io/github/last-commit/ansible/vscode-ansible/main"
-    },
-    {
-      "description": "downloads",
-      "href": "https://github.com/ansible/vscode-ansible",
-      "url": "https://img.shields.io/visual-studio-marketplace/d/redhat.ansible"
+      "href": "https://github.com/NNN706/vscode-ansible",
+      "url": "https://img.shields.io/github/last-commit/NNN706/vscode-ansible"
     }
   ],
-  "bugs": "https://github.com/ansible/vscode-ansible/issues",
+  "bugs": "https://github.com/NNN706/vscode-ansible/issues",
   "categories": [
     "Programming Languages",
     "Linters"
@@ -1084,7 +1079,7 @@
     "vue": "^3.5.39",
     "yaml": "^2.8.3"
   },
-  "description": "Ansible language support",
+  "description": "Community fork of vscode-ansible with portable runner working directory and Run Playbook CodeLens.",
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
     "@eslint/js": "^10.0.1",
@@ -1154,7 +1149,7 @@
     "wdio-vscode-service": "^8.0.0",
     "winston": "^3.19.0"
   },
-  "displayName": "Ansible",
+  "displayName": "Ansible Runner (NNN706)",
   "engineStrict": true,
   "engines": {
     "//": "node version affects only development, it does not affect VS Code runtime",
@@ -1177,13 +1172,13 @@
   ],
   "license": "MIT",
   "main": "./dist/extension/extension.js",
-  "name": "ansible",
+  "name": "ansible-runner",
   "packageManager": "pnpm@12.8.2",
-  "publisher": "redhat",
+  "publisher": "NNN706",
   "qna": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ansible/vscode-ansible.git"
+    "url": "git+https://github.com/NNN706/vscode-ansible.git"
   },
   "onlyBuiltDependencies": [
     "@vscode/vsce-sign",
@@ -1211,7 +1206,7 @@
     "dependencies": false,
     "followSymlinks": true,
     "gitTagVersion": false,
-    "readmePath": "docs/README.md",
+    "readmePath": "docs/fork-overview.md",
     "updatePackageJson": false,
     "yarn": false
   }

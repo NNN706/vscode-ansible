@@ -69,12 +69,12 @@ export async function showUninstallConflictsNotification(
   // Gather all the conflicting display names
   let conflictMsg: string;
   if (conflictingExts.length === 1) {
-    conflictMsg = `${extensionDisplayName(conflictingExts[0])} (${conflictingExts[0].id}) extension is incompatible with redhat.ansible. Please uninstall it.`;
+    conflictMsg = `${extensionDisplayName(conflictingExts[0])} (${conflictingExts[0].id}) extension is incompatible with Ansible Runner (NNN706). Please uninstall it.`;
   } else {
     const extNames: string = conflictingExts
       .map((ext) => `${extensionDisplayName(ext)} (${ext.id})`)
       .join(", ");
-    conflictMsg = `The ${extNames} extensions are incompatible with redhat.ansible. Please uninstall them.`;
+    conflictMsg = `The ${extNames} extensions are incompatible with Ansible Runner (NNN706). Please uninstall them.`;
   }
 
   await window
