@@ -52,7 +52,7 @@ resources. For complete upstream validation, use the existing CI toolchain.
 
 Download the `.vsix` from the GitHub Release. In VS Code select **Extensions →
 Install from VSIX**, then **Developer: Reload Window**. The fork uses the
-`NNN706.ansible-runner` ID and displays as **Ansible Runner (NNN706)**.
+`NNN706.vscode-ansible-runner` ID and displays as **Ansible Runner (NNN706)**.
 Disable the old `redhat.ansible` extension before enabling the fork because their
 commands overlap. Previous VSIX builds using the old ID do not migrate
 automatically. Existing `ansible.*` settings remain applicable.

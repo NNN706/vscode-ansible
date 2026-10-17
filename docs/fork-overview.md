@@ -19,7 +19,7 @@ This is an independently packaged fork, not an official Red Hat release.
 ## Install
 
 Install the fork VSIX using **Extensions: Install from VSIX**. Its ID is
-`NNN706.ansible-runner`. Disable the old `redhat.ansible` extension, including
+`NNN706.vscode-ansible-runner`. Disable the old `redhat.ansible` extension, including
 previous fork builds using that ID, before enabling this package: their commands
 and language features overlap. Existing `ansible.*` workspace settings still apply.
 For Remote SSH, install the VSIX on the SSH host.

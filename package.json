@@ -1172,7 +1172,7 @@
   ],
   "license": "MIT",
   "main": "./dist/extension/extension.js",
-  "name": "ansible-runner",
+  "name": "vscode-ansible-runner",
   "packageManager": "pnpm@12.8.2",
   "publisher": "NNN706",
   "qna": false,
