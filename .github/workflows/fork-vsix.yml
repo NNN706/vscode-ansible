@@ -102,7 +102,6 @@ jobs:
           if-no-files-found: error
 
   release:
-    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'fork-v')
     needs: build
     runs-on: ubuntu-24.04
     permissions:
@@ -116,13 +115,20 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          VSIX_VERSION: ${{ needs.build.outputs.version }}
         run: |
-          if gh release view "$GITHUB_REF_NAME" --json tagName >/dev/null 2>&1; then
-            echo "GitHub Release already exists; continuing deployment."
+          release_tag="build-$GITHUB_RUN_NUMBER"
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            release_tag="$GITHUB_REF_NAME"
+          fi
+          if gh release view "$release_tag" --json tagName >/dev/null 2>&1; then
+            gh release upload "$release_tag" out/*.vsix out/*.tgz out/*.zip --clobber
+            gh release edit "$release_tag" --latest
           else
-            gh release create "$GITHUB_REF_NAME" out/*.vsix out/*.tgz out/*.zip \
-              --verify-tag --title "Ansible fork ${GITHUB_REF_NAME#fork-v}" \
-              --notes "Fork build with portable runner cwd and a Run Playbook CodeLens."
+            gh release create "$release_tag" out/*.vsix out/*.tgz out/*.zip \
+              --target "$GITHUB_SHA" --latest \
+              --title "Ansible fork $VSIX_VERSION (build $GITHUB_RUN_NUMBER)" \
+              --notes "Built from $GITHUB_SHA. Workflow: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           fi
 
   deploy:

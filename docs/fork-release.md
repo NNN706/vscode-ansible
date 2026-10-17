@@ -10,19 +10,18 @@ VSIX. Logs, an ALS tarball, and a ZIP containing VSIX are uploaded as Actions
 artifacts. The release job only runs after a successful build and has
 `contents: write`; build jobs have read-only repository access.
 
-## Publish a Release
+## Automatic Releases
 
-Push a version tag pointing at the tested fork commit:
+Every successful build publishes a GitHub Release with the already built VSIX,
+ZIP and ALS tarball. Branch pushes and manual runs automatically use
+`build-<workflow run number>` as the release tag, pointing to the exact source
+commit. No manually created tag is required. The release is marked **Latest**,
+and its notes link to the source commit and workflow run.
 
-```sh
-git tag fork-v0.0.3
-git push origin fork-v0.0.3
-```
-
-The tag must use `fork-vMAJOR.MINOR.PATCH`. The workflow validates the version,
-uses it for the VSIX manifest and creates a GitHub Release with VSIX, ZIP and
-ALS tarball attached. A failed build does not publish a release. Existing
-releases are not overwritten. Use a new version/tag for the next release.
+Rerunning the same workflow run replaces its same-named assets instead of
+skipping publication. Other releases are retained. A failed build does not
+publish a release. Existing `fork-vMAJOR.MINOR.PATCH` tag runs remain supported
+and use that tag and version.
 
 After every successful build, a separate `deploy` job checks out the private
 `NNN706/workspace` repository using the source repository secret
@@ -39,9 +38,10 @@ Deployment is independent of the GitHub Release job and does not require a tag.
 Rerunning a failed deployment downloads the same build artifact without rebuilding
 or replacing GitHub Release assets.
 
-Branch pushes build version `0.0.3` as an artifact and deploy it automatically
-without publishing a GitHub Release. `workflow_dispatch` also builds and deploys
-an artifact with the supplied version; the
+Branch pushes build version `0.0.3`, publish it in GitHub Releases and deploy it
+automatically. The run number distinguishes releases without changing the VSIX
+version. `workflow_dispatch` builds, publishes and deploys an artifact with the
+supplied version; the
 workflow must be present on the default branch to be listed for manual runs.
 
 The workflow tests the fork runner features. It does not replace the full
